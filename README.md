@@ -1,2 +1,2 @@
 # GEOG-678
-[Link Test](lab02/README.md)
+[Lab02](lab02/README.md)
