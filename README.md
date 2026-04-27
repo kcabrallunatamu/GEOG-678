@@ -1,3 +1,6 @@
 # GEOG-678
-[Lab02](lab02)
-[Lab03](labo3)
+
+<ul>
+<li> [Lab02](lab02) </li>
+<li> [Lab03](labo3) </li>
+</ul>
