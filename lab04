@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Lab 4</title>
+</head>
+
+<body>
+
+    <!-- Task 2: Button that calls Run() -->
+    <input type="button" value="Click Me!" onclick="Run()">
+
+    <!-- Task 1: Include script.js -->
+    <script src="script.js"></script>
+
+    <!-- Task 1: Include data.js -->
+    <script src="data.js"></script>
+
+</body>
+</html>
+
+<!--JAVASCRIPT PORTION-->
+
+// Task 3: Create the Run() function
+function Run() {
+
+    // Task 5: Call the corner-finding functions
+   
+    var topLeftPoint = findTopLeft(data);
+    var topRightPoint = findTopRight(data);
+    var bottomLeftPoint = findBottomLeft(data);
+    var bottomRightPoint = findBottomRight(data);
+
+    // ------------------------------
+    // Task 6: Create bounding box object
+    
+    var boundingBox = {
+        topLeft: topLeftPoint,
+        topRight: topRightPoint,
+        bottomLeft: bottomLeftPoint,
+        bottomRight: bottomRightPoint
+    };
+
+    // ------------------------------
+    // Task 7: Print result + your email
+
+    console.log("Bounding box computed for person@tamu.edu:");
+    console.log(boundingBox);
+}
+
+
+
+// ------------------------------------------------------
+// Task 4: Functions to compute bounding box corners
+
+
+// Top Left = Max Lat, Min Lon
+function findTopLeft(points) {
+    let best = points[0];
+
+    for (let p of points) {
+        if (p.lat > best.lat || (p.lat === best.lat && p.lon < best.lon)) {
+            best = p;
+        }
+    }
+    return best;
+}
+
+// Top Right = Max Lat, Max Lon
+function findTopRight(points) {
+    let best = points[0];
+
+    for (let p of points) {
+        if (p.lat > best.lat || (p.lat === best.lat && p.lon > best.lon)) {
+            best = p;
+        }
+    }
+    return best;
+}
+
+// Bottom Left = Min Lat, Min Lon
+function findBottomLeft(points) {
+    let best = points[0];
+
+    for (let p of points) {
+        if (p.lat < best.lat || (p.lat === best.lat && p.lon < best.lon)) {
+            best = p;
+        }
+    }
+    return best;
+}
+
+// Bottom Right = Min Lat, Max Lon
+function findBottomRight(points) {
+    let best = points[0];
+
+    for (let p of points) {
+        if (p.lat < best.lat || (p.lat === best.lat && p.lon > best.lon)) {
+            best = p;
+        }
+    }
+    return best;
+}
