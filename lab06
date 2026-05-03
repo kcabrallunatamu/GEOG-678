@@ -1,0 +1,508 @@
+\\--------Leaflet GeoJSON Tutorial--------//
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaflet GeoJSON Tutorial — Completed</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    />
+
+    <style>
+        #map {
+            height: 100vh;
+            width: 100vw;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+
+    <script>
+        // Initialize map
+        var map = L.map("map").setView([39.75, -104.99], 5);
+
+        // Add basemap
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        //----- Simple GeoJSON Point Feature -----//
+        var stadium = {
+            "type": "Feature",
+            "properties": {
+                "name": "Coors Field",
+                "popupContent": "This is where the Rockies play!"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-104.99404, 39.75621]
+            }
+        };
+
+        //----- LineString Example -----//
+        var myLines = [
+            {
+                "type": "LineString",
+                "coordinates": [
+                    [-100, 40],
+                    [-105, 45],
+                    [-110, 55]
+                ]
+            },
+            {
+                "type": "LineString",
+                "coordinates": [
+                    [-105, 40],
+                    [-110, 45],
+                    [-115, 55]
+                ]
+            }
+        ];
+
+        var lineStyle = {
+            color: "#ff7800",
+            weight: 5,
+            opacity: 0.65
+        };
+
+        //----- Polygon Example with Styling Based on Properties -----//
+        var states = [
+            {
+                "type": "Feature",
+                "properties": { "party": "Republican" },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[
+                        [-104.05, 48.99],
+                        [-97.22, 48.98],
+                        [-96.58, 45.94],
+                        [-104.03, 45.94],
+                        [-104.05, 48.99]
+                    ]]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": { "party": "Democrat" },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[
+                        [-109.05, 41.00],
+                        [-102.06, 40.99],
+                        [-102.03, 36.99],
+                        [-109.04, 36.99],
+                        [-109.05, 41.00]
+                    ]]
+                }
+            }
+        ];
+
+        function stateStyle(feature) {
+            switch (feature.properties.party) {
+                case "Republican": return { color: "red" };
+                case "Democrat": return { color: "blue" };
+            }
+        }
+
+        //----- Convert Points to CircleMarkers -----//
+        var pointStyle = {
+            radius: 8,
+            fillColor: "#ff7800",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        };
+
+        //----- Add Popups -----//
+        function onEachFeature(feature, layer) {
+            if (feature.properties && feature.properties.popupContent) {
+                layer.bindPopup(feature.properties.popupContent);
+            }
+        }
+
+        //----- Only show features with show_on_map = true -----//
+        var someFeatures = [
+            {
+                "type": "Feature",
+                "properties": {
+                    "name": "Coors Field",
+                    "show_on_map": true
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-104.99404, 39.75621]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "name": "Busch Field",
+                    "show_on_map": false
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-104.98404, 39.74621]
+                }
+            }
+        ];
+
+        //----- Add all GeoJSON layers to map -----//
+
+        // Point with popup
+        L.geoJSON(stadium, { onEachFeature: onEachFeature }).addTo(map);
+
+        // Lines with style
+        L.geoJSON(myLines, { style: lineStyle }).addTo(map);
+
+        // Polygons with conditional styling
+        L.geoJSON(states, { style: stateStyle }).addTo(map);
+
+        // CircleMarkers for points
+        L.geoJSON(stadium, {
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, pointStyle);
+            }
+        }).addTo(map);
+
+        // Filter example
+        L.geoJSON(someFeatures, {
+            filter: function (feature) {
+                return feature.properties.show_on_map;
+            }
+        }).addTo(map);
+
+    </script>
+</body>
+</html>
+
+\\--------Leaflet Interactive Choropleth Map--------//
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaflet Choropleth Map — Completed Tutorial</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <style>
+        #map {
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .info {
+            padding: 6px 8px;
+            font: 14px/16px Arial, Helvetica, sans-serif;
+            background: white;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+
+        .info h4 {
+            margin: 0 0 5px;
+            color: #777;
+        }
+
+        .legend {
+            line-height: 18px;
+            color: #555;
+        }
+
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <!-- Load Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Load the GeoJSON data -->
+    <script src="us-states.js"></script>
+
+    <script>
+        // Initialize map
+        var map = L.map("map").setView([37.8, -96], 4);
+
+        // Add basemap
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        //----- Color scale function -----//
+        function getColor(d) {
+            return d > 1000 ? "#800026" :
+                   d > 500  ? "#BD0026" :
+                   d > 200  ? "#E31A1C" :
+                   d > 100  ? "#FC4E2A" :
+                   d > 50   ? "#FD8D3C" :
+                   d > 20   ? "#FEB24C" :
+                   d > 10   ? "#FED976" :
+                              "#FFEDA0";
+        }
+
+        //----- Style function-----//
+        function style(feature) {
+            return {
+                fillColor: getColor(feature.properties.density),
+                weight: 2,
+                opacity: 1,
+                color: "white",
+                dashArray: "3",
+                fillOpacity: 0.7
+            };
+        }
+
+        //----- Interaction: highlight, reset, zoom -----//
+        var geojson;
+
+        function highlightFeature(e) {
+            var layer = e.target;
+
+            layer.setStyle({
+                weight: 5,
+                color: "#666",
+                dashArray: "",
+                fillOpacity: 0.7
+            });
+
+            layer.bringToFront();
+            info.update(layer.feature.properties);
+        }
+
+        function resetHighlight(e) {
+            geojson.resetStyle(e.target);
+            info.update();
+        }
+
+        function zoomToFeature(e) {
+            map.fitBounds(e.target.getBounds());
+        }
+
+        function onEachFeature(feature, layer) {
+            layer.on({
+                mouseover: highlightFeature,
+                mouseout: resetHighlight,
+                click: zoomToFeature
+            });
+        }
+
+        //----- Info control -----//
+        var info = L.control();
+
+        info.onAdd = function(map) {
+            this._div = L.DomUtil.create("div", "info");
+            this.update();
+            return this._div;
+        };
+
+        info.update = function(props) {
+            this._div.innerHTML =
+                "<h4>US Population Density</h4>" +
+                (props
+                    ? "<b>" + props.name + "</b><br />" +
+                      props.density + " people / mi<sup>2</sup>"
+                    : "Hover over a state");
+        };
+
+        info.addTo(map);
+
+        //----- Add GeoJSON layer -----//
+        geojson = L.geoJson(statesData, {
+            style: style,
+            onEachFeature: onEachFeature
+        }).addTo(map);
+
+        //----- Legend control -----//
+        var legend = L.control({ position: "bottomright" });
+
+        legend.onAdd = function(map) {
+            var div = L.DomUtil.create("div", "info legend"),
+                grades = [0, 10, 20, 50, 100, 200, 500, 1000];
+
+            for (var i = 0; i < grades.length; i++) {
+                div.innerHTML +=
+                    '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+                    grades[i] +
+                    (grades[i + 1] ? "&ndash;" + grades[i + 1] + "<br>" : "+");
+            }
+
+            return div;
+        };
+
+        legend.addTo(map);
+    </script>
+</body>
+</html>
+
+\\--------TAMU MAP--------//
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Kassandra TAMU Map</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css"
+      crossorigin=""/>
+
+    <style>
+      #mapid {
+        height: 600px;
+        width: 800px;
+      }
+
+      .info {
+        padding: 6px 8px;
+        font: 14px/16px Arial, Helvetica, sans-serif;
+        background: white;
+        background: rgba(255,255,255,0.8);
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        border-radius: 5px;
+      }
+
+      .info h4 {
+        margin: 0 0 5px;
+        color: #777;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Kassandra TAMU Map</h1>
+    <div id="mapid"></div>
+
+    <!-- External TAMU Buildings GeoJSON -->
+    <script src="tamubuildings.js"></script>
+
+    <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"
+      crossorigin=""></script>
+
+    <script>
+      // ✔ Zoom to TAMU Campus
+      var map = L.map('mapid').setView([30.6188, -96.3365], 16);
+
+      // ✔ Basemap
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      //----- Info Control -----//
+      var info = L.control();
+
+      info.onAdd = function(map) {
+        this._div = L.DomUtil.create('div', 'info');
+        this.update();
+        return this._div;
+      };
+
+      info.update = function(props) {
+        this._div.innerHTML =
+          '<h4>TAMU Building Info</h4>' +
+          (props ?
+            '<b>' + props.BldgName + '</b><br>' +
+            'Abbreviation: ' + props.BldgAbbr + '<br>' +
+            'Building Number: ' + props.Number :
+            'Hover over a building');
+      };
+
+      info.addTo(map);
+
+      //----- Building Style -----//
+      function style(feature) {
+        return {
+          weight: 2,
+          opacity: 1,
+          color: '#500000',
+          dashArray: '3',
+          fillOpacity: 0.7,
+          fillColor: '#800000'
+        };
+      }
+
+      //----- Highlight on Hover -----//
+      function highlightFeature(e) {
+        var layer = e.target;
+
+        layer.setStyle({
+          weight: 5,
+          color: '#333',
+          dashArray: '',
+          fillOpacity: 0.9
+        });
+
+        layer.bringToFront();
+        info.update(layer.feature.properties);
+      }
+
+      //----- Reset Highlight -----//
+      function resetHighlight(e) {
+        buildingsLayer.resetStyle(e.target);
+        info.update();
+      }
+
+      //----- Click to Zoom -----//
+      function zoomToFeature(e) {
+        map.fitBounds(e.target.getBounds());
+      }
+
+      //----- Event Listeners for Each Building -----//
+      function onEachFeature(feature, layer) {
+        layer.on({
+          mouseover: highlightFeature,
+          mouseout: resetHighlight,
+          click: zoomToFeature
+        });
+      }
+
+      //----- Add TAMU Buildings GeoJSON Layer -----//
+      var buildingsLayer = L.geoJSON(tamuBuildings, {
+        style: style,
+        onEachFeature: onEachFeature
+      }).addTo(map);
+    </script>
+  </body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
